@@ -76,8 +76,8 @@ class AnotacoesHelperDb {
     int count = await database.update(
       'anotations',
       anotation.toMap(),
-      where: 'title = ?, description = ?',
-      whereArgs: [anotation.title, anotation.description],
+      where: 'id = ?',
+      whereArgs: [anotation.id],
     );
   }
 

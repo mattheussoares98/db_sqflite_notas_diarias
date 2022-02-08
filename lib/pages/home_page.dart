@@ -28,7 +28,8 @@ class _HomePageState extends State<HomePage> {
       int resultId = await _db.saveAnotation(anotation);
     } else {
       //atualizando
-      _db.updateAnotation(selectedAnotation);
+      print('atualizando');
+      await _db.updateAnotation(selectedAnotation);
     }
 
     ///na primeira vez que chama o _db, o banco de dados ainda não foi criado,
