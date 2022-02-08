@@ -16,21 +16,26 @@ AnotacoesHelperDb _db = AnotacoesHelperDb();
 List<Anotation> anotations = [];
 
 class _HomePageState extends State<HomePage> {
-  _saveAnotation() async {
+  _saveOrEditAnotation({Anotation? selectedAnotation}) async {
     Anotation anotation = Anotation(
       title: _titleController.text,
       description: _descriptionController.text,
       date: DateTime.now().toString(),
     );
 
-    int resultId = await _db.saveAnotation(anotation);
+    if (selectedAnotation == null) {
+      //salvando
+      int resultId = await _db.saveAnotation(anotation);
+    } else {
+      //atualizando
+      _db.updateAnotation(selectedAnotation);
+    }
 
     ///na primeira vez que chama o _db, o banco de dados ainda não foi criado,
     ///porém, no _db.saveAnotation ele chama o get do "db" e nesse get, é verificado
     ///se já foi criado um banco de dados e caso não esteja criado ainda, ele cria
     ///um no próprio get
 
-    print(resultId);
     _titleController.clear();
     _descriptionController.clear();
   }
@@ -54,7 +59,17 @@ class _HomePageState extends State<HomePage> {
     return anotations;
   }
 
-  _saveNote() {
+  _saveOrUpdateNote({Anotation? anotation}) {
+    if (anotation == null) {
+      //salvando
+      _titleController.clear();
+      _descriptionController.clear();
+    } else {
+      //editando
+      _titleController.text = anotation.title;
+      _descriptionController.text = anotation.description;
+    }
+
     showDialog(
       context: context,
       builder: (context) {
@@ -89,7 +104,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 TextButton(
                   onPressed: () {
-                    _saveAnotation();
+                    _saveOrEditAnotation(selectedAnotation: anotation);
                     _getAnotations();
                     Navigator.of(context).pop();
                   },
@@ -148,16 +163,24 @@ class _HomePageState extends State<HomePage> {
                     ])} - ${anotations[index].description}'),
                 visualDensity: VisualDensity.compact,
                 trailing: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.edit),
+                    GestureDetector(
+                      onTap: () {
+                        _saveOrUpdateNote(anotation: anotations[index]);
+                      },
+                      child: const Icon(
+                        Icons.edit,
+                        color: Colors.green,
+                      ),
                     ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.remove),
+                    const SizedBox(width: 5),
+                    GestureDetector(
+                      onTap: () {},
+                      child: const Icon(
+                        Icons.remove_circle,
+                        color: Colors.red,
+                      ),
                     ),
                   ],
                 ),
@@ -170,7 +193,7 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         onPressed: () {
-          _saveNote();
+          _saveOrUpdateNote();
         },
         child: const Icon(Icons.add),
       ),

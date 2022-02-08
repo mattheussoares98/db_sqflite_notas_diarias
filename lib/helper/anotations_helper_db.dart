@@ -71,6 +71,16 @@ class AnotacoesHelperDb {
     return anotations;
   }
 
+  updateAnotation(Anotation anotation) async {
+    Database database = await db;
+    int count = await database.update(
+      'anotations',
+      anotation.toMap(),
+      where: 'title = ?, description = ?',
+      whereArgs: [anotation.title, anotation.description],
+    );
+  }
+
   //Construtor interno. Ele é chamado somente na primeira vez que a classe é chamada
   AnotacoesHelperDb._internal() {}
 
