@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage> {
                 TextFormField(
                   controller: _titleController,
                   decoration: const InputDecoration(
-                    labelText: 'Digite o título',
+                    labelText: 'Título',
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> {
                 TextFormField(
                   controller: _descriptionController,
                   decoration: const InputDecoration(
-                    labelText: 'Digite a descrição',
+                    labelText: 'Descrição',
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
