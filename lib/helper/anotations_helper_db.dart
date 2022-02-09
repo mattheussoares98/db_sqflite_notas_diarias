@@ -21,16 +21,20 @@ class AnotacoesHelperDb {
 
   get db async {
     if (_db != null) {
+      //caso o banco de dados já esteja criado, ele retorna o atual
       return _db;
     } else {
+      //caso não esteja criado, ele cria um e o retorna
       _db = await createDatabase();
     }
     return _db;
   }
 
   createDatabase() async {
+    //método para criar o banco de dados
     final String databasePath = await getDatabasesPath();
     final String databaseLocal = join(databasePath, 'anotatios.db');
+    //local onde o banco de dados será salvo
 
     Database db = await openDatabase(
       databaseLocal,
@@ -42,7 +46,7 @@ class AnotacoesHelperDb {
     return db;
   }
 
-  _createTable(Database db, int version) async {
+  Future<void> _createTable(Database db, int version) async {
     await db.execute(
       'CREATE TABLE anotations (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR, description TEXT, date DATETIME)',
       //O tipo VARCHAR possui um limite de caracteres menor do que o TEXT.
@@ -54,9 +58,14 @@ class AnotacoesHelperDb {
   Future<int> saveAnotation(Anotation anotation) async {
     Database database = await db;
 
-    int resultId = await database.insert('anotations', anotation.toMap());
+    int id = await database.insert(
+      'anotations',
+      anotation.toMap(),
+      //para inserir precisa enviar um map. Por isso na classe "Anotation" há um
+      //método pra converter o Anotation para um Map
+    );
 
-    return resultId;
+    return id;
     //retorna o ID do dado adicionado no banco de dados
   }
 
@@ -76,8 +85,11 @@ class AnotacoesHelperDb {
     int id = await database.update(
       'anotations',
       anotation.toMap(),
+      //convertendo o "anotation" para um Map, pois é o que o DB espera receber
       where: 'id = ?',
+      //coluna que será usada para realizar a transação. O ideal é sempre usar o id
       whereArgs: [anotation.id],
+      //precisa passar o id da transação que será atualizada nos "whereArgs"
     );
 
     return id;
@@ -89,7 +101,9 @@ class AnotacoesHelperDb {
     int id = await database.delete(
       'anotations',
       where: 'id = ?',
+      //coluna que será usada para realizar a transação. O ideal é sempre usar o id
       whereArgs: [anotation.id],
+      //precisa passar o id da transação que será atualizada nos "whereArgs"
     );
 
     return id;

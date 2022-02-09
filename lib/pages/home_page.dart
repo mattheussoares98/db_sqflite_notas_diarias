@@ -16,6 +16,8 @@ AnotacoesHelperDb _db = AnotacoesHelperDb();
 List<Anotation> anotations = [];
 
 class _HomePageState extends State<HomePage> {
+  final _formKey = GlobalKey<FormState>();
+
   _saveOrEditAnotation({Anotation? selectedAnotation}) async {
     Anotation anotation = Anotation(
       title: _titleController.text,
@@ -25,9 +27,17 @@ class _HomePageState extends State<HomePage> {
 
     if (selectedAnotation == null) {
       //salvando
+      bool _isValid = _formKey.currentState!.validate();
+      if (!_isValid) {
+        return;
+      }
       int resultId = await _db.saveAnotation(anotation);
     } else {
       //atualizando
+      bool _isValid = _formKey.currentState!.validate();
+      if (!_isValid) {
+        return;
+      }
       selectedAnotation.title = _titleController.text;
       selectedAnotation.description = _descriptionController.text;
       await _db.updateAnotation(selectedAnotation);
@@ -40,40 +50,6 @@ class _HomePageState extends State<HomePage> {
 
     _titleController.clear();
     _descriptionController.clear();
-  }
-
-  _deleteAnotation({Anotation? selectedAnotation}) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            'Deseja realmente excluir a transação?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  anotations.removeWhere(
-                    (element) => element.id == selectedAnotation!.id,
-                  );
-                });
-                _db.deleteAnotation(selectedAnotation!);
-
-                Navigator.of(context).pop();
-              },
-              child: const Text('Sim'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Não'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   _getAnotations() async {
@@ -105,28 +81,45 @@ class _HomePageState extends State<HomePage> {
       _titleController.text = anotation.title;
       _descriptionController.text = anotation.description;
     }
+    //esse if/else serve só pra verificar quais informações devem ser exibidas
+    //quando abrir o showDialog a seguir
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Digite o título',
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Digite o título',
+                  ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Digite o título';
+                    }
+                    return null;
+                  },
+                  autofocus: true,
                 ),
-                autofocus: true,
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Digite a descrição',
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Digite a descrição',
+                  ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Digite a descrição';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             Row(
@@ -140,11 +133,55 @@ class _HomePageState extends State<HomePage> {
                 ),
                 TextButton(
                   onPressed: () {
+                    bool _isValid = _formKey.currentState!.validate();
+                    if (!_isValid) {
+                      return;
+                    }
                     _saveOrEditAnotation(selectedAnotation: anotation);
                     _getAnotations();
                     Navigator.of(context).pop();
                   },
                   child: const Text('Salvar'),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  _deleteAnotation({Anotation? selectedAnotation}) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Deseja realmente excluir a transação?',
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Não'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      anotations.removeWhere(
+                        (element) => element.id == selectedAnotation!.id,
+                      );
+                    });
+                    _db.deleteAnotation(selectedAnotation!);
+
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Sim'),
                 ),
               ],
             ),
@@ -182,9 +219,6 @@ class _HomePageState extends State<HomePage> {
                   )),
               elevation: 3,
               child: ListTile(
-                onTap: () {
-                  _saveOrUpdateNote(anotation: anotations[index]);
-                },
                 title: Text(anotations[index].title),
                 subtitle: Text('${formatDate(DateTime.parse(
                       anotations[index].date,
