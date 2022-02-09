@@ -28,7 +28,8 @@ class _HomePageState extends State<HomePage> {
       int resultId = await _db.saveAnotation(anotation);
     } else {
       //atualizando
-      print('atualizando');
+      selectedAnotation.title = _titleController.text;
+      selectedAnotation.description = _descriptionController.text;
       await _db.updateAnotation(selectedAnotation);
     }
 
@@ -39,6 +40,40 @@ class _HomePageState extends State<HomePage> {
 
     _titleController.clear();
     _descriptionController.clear();
+  }
+
+  _deleteAnotation({Anotation? selectedAnotation}) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Deseja realmente excluir a transação?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  anotations.removeWhere(
+                    (element) => element.id == selectedAnotation!.id,
+                  );
+                });
+                _db.deleteAnotation(selectedAnotation!);
+
+                Navigator.of(context).pop();
+              },
+              child: const Text('Sim'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Não'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   _getAnotations() async {
@@ -121,7 +156,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
     super.didChangeDependencies();
     _getAnotations();
   }
@@ -148,6 +182,9 @@ class _HomePageState extends State<HomePage> {
                   )),
               elevation: 3,
               child: ListTile(
+                onTap: () {
+                  _saveOrUpdateNote(anotation: anotations[index]);
+                },
                 title: Text(anotations[index].title),
                 subtitle: Text('${formatDate(DateTime.parse(
                       anotations[index].date,
@@ -177,7 +214,11 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(width: 5),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        _deleteAnotation(
+                          selectedAnotation: anotations[index],
+                        );
+                      },
                       child: const Icon(
                         Icons.remove_circle,
                         color: Colors.red,

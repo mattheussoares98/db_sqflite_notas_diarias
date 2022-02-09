@@ -71,14 +71,28 @@ class AnotacoesHelperDb {
     return anotations;
   }
 
-  updateAnotation(Anotation anotation) async {
+  Future<int> updateAnotation(Anotation anotation) async {
     Database database = await db;
-    int count = await database.update(
+    int id = await database.update(
       'anotations',
       anotation.toMap(),
       where: 'id = ?',
       whereArgs: [anotation.id],
     );
+
+    return id;
+  }
+
+  Future<int> deleteAnotation(Anotation anotation) async {
+    Database database = await db;
+
+    int id = await database.delete(
+      'anotations',
+      where: 'id = ?',
+      whereArgs: [anotation.id],
+    );
+
+    return id;
   }
 
   //Construtor interno. Ele é chamado somente na primeira vez que a classe é chamada
